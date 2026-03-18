@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoTap</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #0b0c1c, #1a1a3d);
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #ffcc00;
+    font-size: 2em;
+  }
+  #balance {
+    font-size: 1.5em;
+    margin: 15px;
+  }
+  button {
+    font-size: 1.5em;
+    padding: 15px 40px;
+    margin: 15px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffcc00, #ff9900);
+    box-shadow: 0 0 15px #ffcc00;
+    transition: transform 0.1s;
+  }
+  button:active { transform: scale(0.95); }
+  #bonus, #referral, #settings, #leaderboard {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  #settings button {
+    background: #4444aa;
+    color: #fff;
+    margin: 5px;
+  }
+  #leaderboard ol {
+    padding-left: 0;
+    list-style-position: inside;
+  }
+</style>
+</head>
+<body>
+
+<h1>CryptoTap 💰</h1>
+<div id="user">Connecté : Invité</div>
+<div id="balance">Solde : 0 USD</div>
+<button id="coinBtn">Appuie sur la pièce 💎</button>
+<div id="bonus">Bonus quotidien : +5 coins</div>
+<div id="referral">Parraine un ami et gagne +10 coins !</div>
+
+<div id="settings">
+  <h3>Paramètres du compte</h3>
+  <button id="withdrawBtn">Retirer (min 200$)</button>
+  <button id="resetBtn">Réinitialiser le solde</button>
+</div>
+
+<div id="leaderboard">
+  <h3>Leaderboard</h3>
+  <ol id="leaders"></ol>
+</div>
+
+<script>
+let balance = 0;
+const dailyBonus = 5;
+const coinBtn = document.getElementById('coinBtn');
+const balanceDiv = document.getElementById('balance');
+const leadersList = document.getElementById('leaders');
+const withdrawBtn = document.getElementById('withdrawBtn');
+const resetBtn = document.getElementById('resetBtn');
+const user = "Invité"; // Telegram sera intégré plus tard
+document.getElementById('user').innerText = "Connecté : " + user;
+
+// TAP TO WIN
+function addCoins() {
+  const gain = Math.floor(Math.random() * 10) + 1; // 1 à 10 coins
+  balance += gain;
+  updateBalance();
+  updateLeaderboard();
+}
+
+// Bonus quotidien
+function dailyBonusCheck() {
+  const lastBonus = localStorage.getItem('lastBonus');
+  const today = new Date().toDateString();
+  if(lastBonus !== today) {
+    balance += dailyBonus;
+    localStorage.setItem('lastBonus', today);
+    alert("Bonus quotidien ajouté ! +5 coins");
+    updateBalance();
+  }
+}
+
+// Mise à jour du solde
+function updateBalance() {
+  balanceDiv.innerText = "Solde : " + balance + " USD";
+}
+
+// Leaderboard local
+function updateLeaderboard() {
+  let leaders = JSON.parse(localStorage.getItem('leaders') || '[]');
+  leaders.push({name: user, score: balance});
+  leaders.sort((a,b) => b.score - a.score);
+  leaders = leaders.slice(0,5);
+  localStorage.setItem('leaders', JSON.stringify(leaders));
+  renderLeaderboard(leaders);
+}
+
+function renderLeaderboard(leaders) {
+  leadersList.innerHTML = "";
+  leaders.forEach(l => {
+    const li = document.createElement('li');
+    li.innerText = l.name + ": " + l.score + " USD";
+    leadersList.appendChild(li);
+  });
+}
+
+// Retrait
+withdrawBtn.addEventListener('click', () => {
+  if(balance >= 200) {
+    alert("Demande de retrait envoyée !");
+    balance = 0;
+    updateBalance();
+  } else {
+    alert("Solde minimum de 200$ requis pour retirer !");
+  }
+});
+
+// Réinitialiser le solde
+resetBtn.addEventListener('click', () => {
+  if(confirm("Voulez-vous réinitialiser votre solde ?")) {
+    balance = 0;
+    updateBalance();
+  }
+});
+
+// Événements
+coinBtn.addEventListener('click', addCoins);
+
+// Initialisation
+window.onload = () => {
+  dailyBonusCheck();
+  const savedLeaders = JSON.parse(localStorage.getItem('leaders') || '[]');
+  renderLeaderboard(savedLeaders);
+  updateBalance();
+};
+</script>
+
+</body>
+</html>
